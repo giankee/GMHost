@@ -71,6 +71,7 @@ namespace WebAppGM.Controllers
                             maquinaria = new gm_maquinaria
                             {
                                 idMaquina = y.maquinaria.idMaquina,
+                                modelo= y.maquinaria.modelo,
                                 planMantenimientoId=y.maquinaria.planMantenimientoId
                             }
                         }).Where(b=>b.checkMaquinaria==true && b.maquinaria.planMantenimientoId!=null).ToList()
@@ -103,6 +104,7 @@ namespace WebAppGM.Controllers
                             fechaIncorporacionB = y.fechaIncorporacionB,
                             maquinaria = new gm_maquinaria
                             {
+                                modelo = y.maquinaria.modelo,
                                 planMantenimientoId = y.maquinaria.planMantenimientoId
                             }
                         }).Where(b => b.checkMaquinaria == true && b.maquinaria.planMantenimientoId != null).ToList()

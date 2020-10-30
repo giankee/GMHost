@@ -33,10 +33,12 @@ namespace WebappGM_API.Controllers
                 .ToListAsync();
         }
 
-        [Route("getItemTipo/{tipo}")]
-        public async Task<ActionResult<IEnumerable<gm_item>>> getItemTipo(string tipo)
+        [Route("getItemTipo/{strParametros}")]
+        public async Task<ActionResult<IEnumerable<gm_item>>> getItemTipo(string strParametros)
         {
-            return await _context.gm_items.Select(x =>
+            string[] parametros = strParametros.Split('@');
+            //0.tipo    1.op(obligatorio o opcional)
+            var items= await _context.gm_items.Select(x =>
                    new gm_item
                    {
                        idItem = x.idItem,
@@ -70,7 +72,7 @@ namespace WebappGM_API.Controllers
                                nombre=y1.identidadM.nombre,
                                estado= y1.identidadM.estado
                            },
-                       }).Where(y1 => y1.identidadM.nombre == tipo && y1.identidadM.estado == 1).ToList(),
+                       }).Where(y1 => y1.identidadM.nombre == parametros[0] && y1.identidadM.estado == 1 && y1.opcional== bool.Parse(parametros[1])).ToList(),
                        listItem_itemCategory= x.listItem_itemCategory.Select(z =>
                        new gm_item_itemCategory
                        {
@@ -85,7 +87,9 @@ namespace WebappGM_API.Controllers
                                estado=z.itemCategory.estado
                            }
                        }).Where(z => z.estado == 1 && z.itemCategory.estado==1).ToList()
-                   }).ToListAsync();//tengo que arreglar esto no debe retornar el valor si 
+                   }).ToListAsync();
+            items = items.Where(x => x.listItem_identidad.Count > 0).ToList();
+            return items;
         }
 
         // GET: api/gm_item/5

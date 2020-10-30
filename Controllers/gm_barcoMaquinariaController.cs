@@ -104,7 +104,7 @@ namespace WebappGM_API.Controllers
                        {
                            nombre = x.barco.nombre
                        }
-                   }).Where(x => x.idBarcoMaquinaria == id && x.maquinaria.tipoMaquinaria == "Motor")
+                   }).Where(x => x.idBarcoMaquinaria == id && x.maquinaria.tipoMaquinaria == "Motor Marino")
                 .FirstOrDefaultAsync();
 
             if (barcoMaquinaria == null)
@@ -141,7 +141,7 @@ namespace WebappGM_API.Controllers
                            modelo=x.maquinaria.modelo,
                            marca=x.maquinaria.marca
                        },
-                   }).Where(x => x.barcoId == id && x.maquinaria.estado==1 && x.maquinaria.tipoMaquinaria=="Motor")
+                   }).Where(x => x.barcoId == id && x.maquinaria.estado==1 && x.maquinaria.tipoMaquinaria=="Motor Marino")
                 .ToListAsync();
         }
 

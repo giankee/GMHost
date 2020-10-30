@@ -15,10 +15,7 @@ namespace WebAppGM.Models
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy",
-                    builder => builder.WithOrigins("http://192.168.2.226:4200")//trabajo1
-                    //builder => builder.WithOrigins("http://192.168.2.215:5004")//trabajoHostLocal
-                    //builder => builder.WithOrigins("http://192.168.2.97:5004")//trabajoHostServer
-                    //builder => builder.WithOrigins("http://192.168.1.123:4200")//casa
+                    builder => builder.WithOrigins("http://appweb.manacripex.com:5004", "http://192.168.2.97:5004", "http://192.168.2.221:5004", "http://192.168.2.221:4200")//trabajoHostServer
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials());

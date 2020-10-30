@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebAppGM.Models;
+using WebappGM_API.Models;
 using WepAppGM.Models;
 
 namespace WebAppGM.Controllers
@@ -43,7 +44,7 @@ namespace WebAppGM.Controllers
         [Route("getMaquinariasEspecifico/{tipo}")]
         public async Task<ActionResult<IEnumerable<gm_maquinaria>>> getMaquinariasEspecifico(string tipo)
         {
-            if(tipo=="Motor")
+            if(tipo=="Motor Marino")
                 return await _context.gm_maquinarias.Where(x => x.tipoMaquinaria == tipo)
                 .Select(x =>
                     new gm_maquinaria
@@ -55,7 +56,7 @@ namespace WebAppGM.Controllers
                         estado = x.estado
                     }).ToListAsync();
             else
-                return await _context.gm_maquinarias.Where(x => x.tipoMaquinaria != "Motor")
+                return await _context.gm_maquinarias.Where(x => x.tipoMaquinaria != "Motor Marino")
                 .Select(x =>
                     new gm_maquinaria
                     {
@@ -68,7 +69,7 @@ namespace WebAppGM.Controllers
 
         // GET: api/gm_maquinaria/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Getgm_maquinaria([FromRoute] int id)
+        public async Task<IActionResult> Getgm_maquinaria([FromRoute] int id)//refactorar muchos datos inservibles primero  lo uso en maquinaria update 
         {
             if (!ModelState.IsValid)
             {
@@ -77,15 +78,69 @@ namespace WebAppGM.Controllers
 
             gm_maquinaria maquinaria;
 
-            
-            maquinaria = await _context.gm_maquinarias
-                        .Include(s => s.planMantenimiento)
-                        .Include(s => s.listdetalleFichaM).ThenInclude(a => a.item).ThenInclude(a => a.magnitud).ThenInclude(a => a.listUnidad)
-                        .Include(s => s.listdetalleFichaM).ThenInclude(b => b.item).ThenInclude(b => b.listItem_identidad).ThenInclude(b => b.identidadM)
-                        .Include(s => s.listdetalleFichaM).ThenInclude(y => y.listDetalleCollection).ThenInclude(y => y.itemCategory)
-                        .Include(s => s.listBarcoMaquinaria)
-                        .Where(s => s.idMaquina == id)
-                        .FirstOrDefaultAsync();
+            maquinaria = await _context.gm_maquinarias.Select(x =>
+                   new gm_maquinaria
+                   {
+                       idMaquina = x.idMaquina,
+                       tipoMaquinaria = x.tipoMaquinaria,
+                       marca = x.marca,
+                       modelo = x.modelo,
+                       planMantenimientoId = x.planMantenimientoId,
+                       estado = x.estado,
+                       listBarcoMaquinaria = x.listBarcoMaquinaria.Select(y =>
+                          new gm_barco_maquinaria
+                          {
+                              idBarcoMaquinaria = y.idBarcoMaquinaria,
+                              barcoId = y.barcoId,
+                              nombre = y.nombre,
+                              serie=y.serie,
+                              checkMaquinaria = y.checkMaquinaria,
+                              estado=y.estado
+                          }).ToList(),
+                       listdetalleFichaM = x.listdetalleFichaM.Select(z =>
+                        new gm_detalleFichaM
+                        {
+                            idDetalleFichaM = z.idDetalleFichaM,
+                            maquinariaId = z.maquinariaId,
+                            estado = z.estado,
+                            itemId = z.itemId,
+                            item = new gm_item
+                            {
+                                idItem = z.item.idItem,
+                                nombre = z.item.nombre,
+                                magnitudId = z.item.magnitudId,
+                                magnitud = new gm_magnitud
+                                {
+                                    idMagnitud = z.item.magnitud.idMagnitud,
+                                    nombre = z.item.magnitud.nombre,
+                                    estado = z.item.magnitud.estado,
+                                    listUnidad = z.item.magnitud.listUnidad.Select(z1 =>
+                                    new gm_unidad
+                                    {
+                                        idUnidad = z1.idUnidad,
+                                        nombre = z1.nombre,
+                                        simbolo = z1.simbolo,
+                                        estado = z1.estado
+                                    }).ToList()
+                                }
+                            },
+                            listDetalleCollection = z.listDetalleCollection.Select(z2 =>
+                             new gm_detalleCollection
+                            {
+                                idDetalleCollection = z2.idDetalleCollection,
+                                detalleFichaMId = z2.detalleFichaMId,
+                                itemCategoryId = z2.itemCategoryId,
+                                unidadId = z2.unidadId,
+                                valor = z2.valor,
+                                itemCategory = new gm_itemCategory
+                                {
+                                    idItemCategory = z2.itemCategory.idItemCategory,
+                                    nombre = z2.itemCategory.nombre,
+                                    estado = z2.itemCategory.estado
+                                }
+                            }).ToList()
+                        }).ToList()
+                   }).Where(s => s.idMaquina == id).FirstOrDefaultAsync();
 
             if (maquinaria == null)
             {
@@ -183,7 +238,7 @@ namespace WebAppGM.Controllers
         [HttpPost]
          public async Task<IActionResult> Postgm_maquinaria([FromBody] gm_maquinaria gm_maquinaria)
          {
-            gm_maquinaria nombre = await _context.gm_maquinarias.Where(s => s.modelo == gm_maquinaria.modelo).FirstOrDefaultAsync();
+            gm_maquinaria nombre = await _context.gm_maquinarias.Where(s => s.modelo == gm_maquinaria.modelo && s.tipoMaquinaria==gm_maquinaria.tipoMaquinaria).FirstOrDefaultAsync();
 
             if (nombre == null)
             {
@@ -193,7 +248,7 @@ namespace WebAppGM.Controllers
                     await _context.SaveChangesAsync();
                 }
                 //detalle tabla
-                if (gm_maquinaria.listdetalleFichaM != null)
+                if (gm_maquinaria.listdetalleFichaM != null) {
                     foreach (var datoF in gm_maquinaria.listdetalleFichaM)
                     {
                         if (datoF.idDetalleFichaM == 0)
@@ -202,6 +257,7 @@ namespace WebAppGM.Controllers
                             await _context.SaveChangesAsync();
                         }
                     }
+                }
                 if (gm_maquinaria.listBarcoMaquinaria != null)
                 {
                     foreach (var datoBM in gm_maquinaria.listBarcoMaquinaria)

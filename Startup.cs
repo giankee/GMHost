@@ -35,26 +35,20 @@ namespace WebappGM
             services.Configure<ApplicationSettings>(Configuration.GetSection("ApplicationSettings"));//para coger los datos estaticos de seguridad y de la ip de angular
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)//la compatibilidad con el core
-
                 .AddJsonOptions(options =>
                 {
-                    /*var resolver = options.SerializerSettings.ContractResolver;
-                    if (resolver != null)
-                        (resolver as DefaultContractResolver).NamingStrategy = null;*/
                     var resolver = options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;//falta arregalar el error de referencias relacionadas en la tabla detalle fichas
-                    //var resolver = options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;///funciona pero no :p 
                 });
 
             //para el dbContext
-            services.AddDbContext<DbGmContext>(options => options.UseMySql(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<DbGmContext>(options => options.UseMySql(Configuration.GetConnectionString("DefaultConnectionGM")));
             //para el identityContext
-            services.AddDbContext<AuthenticationContext>(options => options.UseMySql(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<AuthenticationContext>(options => options.UseMySql(Configuration.GetConnectionString("DefaultConnectionGM")));
 
             /*Autentificacion*/
             services.AddDefaultIdentity<gm_usuario>()
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<AuthenticationContext>();
-                //.AddDefaultTokenProviders();
 
             services.Configure<IdentityOptions>(options =>
             {
@@ -69,9 +63,6 @@ namespace WebappGM
             );
 
             services.ConfigureCors();
-
-
-            //Jwt Authentication
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -111,8 +102,6 @@ namespace WebappGM
             app.UseCors("CorsPolicy");
             app.UseAuthentication();
             app.UseMvc();
-
-            
         }
     }
 }
