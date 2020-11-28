@@ -28,9 +28,6 @@ namespace WebappGM_API.Models.OrdenesTrabajoB
         [Required]
         public bool estadoRealizado { get; set; }
 
-        [Required]
-        public bool isNormal { get; set; }//puede ser el nuevo cambio
-
         public int? notificacionId { get; set; }
 
         public gm_notificacion notificacion { get; set; }

@@ -27,9 +27,11 @@ namespace WebappGM_API.Models.OrdenesTrabajoB
         [Required]
         public int valorHS { get; set; }
 
+
         [Required]
-        [Column(TypeName = "varchar(10)")]
-        public string fechaIngreso { get; set; }
+        [DisplayFormat(DataFormatString = "{0:yyyy/MM/dd}")]
+        [DataType(DataType.Date)]
+        public DateTime fechaIngreso { get; set; }
 
         [Column(TypeName = "varchar(10)")]
         public string fechaFinalizacion { get; set; }
@@ -49,6 +51,9 @@ namespace WebappGM_API.Models.OrdenesTrabajoB
         [Required]
         [Column(TypeName = "varchar(25)")]
         public string estadoProceso { get; set; }
+
+        [Column(TypeName = "varchar(10)")]
+        public string marea { get; set; }
 
         public gm_barco_maquinaria barcoMaquinaria{ get; set; }
 

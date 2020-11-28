@@ -39,12 +39,9 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
             .FirstOrDefaultAsync();
 
             if (historial == null)
-            {
                 return Ok(new { message = "cero" });
-            }
-            else
-            {
-                return await _context.gm_historialBMs.Where(x => x.barcoMaquinariaId == id).Select( x =>
+         
+            return await _context.gm_historialBMs.Where(x => x.barcoMaquinariaId == id).Select( x =>
                     new gm_historialBM
                     {
                         idHistorialBM=x.idHistorialBM,
@@ -59,16 +56,17 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
                               ordenT = new gm_ordenTrabajoB
                               {
                                   fechaFinalizacion = y.ordenT.fechaFinalizacion,
+                                  fechaIngreso = y.ordenT.fechaIngreso,
                                   valorHS = y.ordenT.valorHS
                               }
                           }).ToList(),
-                        barcoMaquinaria = new gm_barco_maquinaria
+                        /*barcoMaquinaria = new gm_barco_maquinaria
                         {
                             maquinariaId = x.barcoMaquinaria.maquinariaId,
-                        }
+                        }*///parece q no la necesito en new orden pero nc aun en historial
                     })
                 .ToListAsync();
-            }        
+                    
         }
 
         [Route("getBarcoHistorial/{id:int}")]//si funciona
@@ -158,7 +156,7 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
             foreach (var datoL in gm_historialBM)
             {
                 historial = await _context.gm_historialBMs
-                .Where(s => s.barcoMaquinariaId == datoL.barcoMaquinariaId && s.tareaMId == datoL.tareaMId && s.intervaloId == datoL.intervaloId).FirstOrDefaultAsync();
+                .Where(s => s.barcoMaquinariaId == datoL.barcoMaquinariaId && s.tareaMId == datoL.tareaMId && (s.intervaloId == datoL.intervaloId || (s.intervaloId==null && datoL.intervaloId==null))).FirstOrDefaultAsync();
                 if (historial != null)
                 {
                     foreach (var datoHOrden in datoL.listHistoTaOrdenes)

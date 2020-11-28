@@ -70,6 +70,7 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
                     estadoProceso = x.estadoProceso,
                     responsable = x.responsable,
                     supervisor = x.supervisor,
+                    marea=x.marea,
                     descripcionSolicitud = x.descripcionSolicitud,
                     valorHS = x.valorHS,
                     barcoMaquinaria= new gm_barco_maquinaria
@@ -81,6 +82,7 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
                         serie=x.barcoMaquinaria.serie,
                         fechaIncorporacionB=x.barcoMaquinaria.fechaIncorporacionB,
                         checkMaquinaria=x.barcoMaquinaria.checkMaquinaria,
+                        horasServicio=x.barcoMaquinaria.horasServicio,
                         barco= new gm_barco
                         {
                             nombre= x.barcoMaquinaria.barco.nombre,
@@ -100,7 +102,6 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
                           ordenTrabajoId = y.ordenTrabajoId,
                           tareaMId = y.tareaMId,
                           observacion = y.observacion,
-                          isNormal=y.isNormal,
                           reponsableTarea = y.reponsableTarea,
                           estadoRealizado = y.estadoRealizado,
                           notificacionId = y.notificacionId,
@@ -162,6 +163,7 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
                    {
                        idOrdenT=x.idOrdenT,
                        titulo=x.titulo,
+                       marea=x.marea,
                        tipoMantenimiento=x.tipoMantenimiento,
                        barcoMaquinariaId=x.barcoMaquinariaId,
                        valorHS=x.valorHS,
@@ -203,6 +205,29 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
             return Ok(orden);
         }
 
+        // GET: api/gm_ordenTrabajo/getBuscarOrdenPendiente/parametros1@parametro2....
+        [Route("getBuscarOrdenPre/{strParametros}")]
+        public async Task<ActionResult<gm_ordenTrabajoB>> GetBuscarOrdenPre(string strParametros)
+        {
+            string[] parametros = strParametros.Split('@');
+            string[] inMantenimiento = parametros[1].Split('-');
+            DateTime dateMantenimiento = new DateTime(int.Parse(inMantenimiento[0]), int.Parse(inMantenimiento[1]), int.Parse(inMantenimiento[2]), 0, 0, 0);
+
+            gm_ordenTrabajoB orden;
+
+            orden = await _context.gm_ordenTrabajosB
+            .Where(s => s.barcoMaquinariaId == int.Parse(parametros[0]) && (s.estadoProceso == "Preliminar" || s.estadoProceso == "En Proceso"))
+            .FirstOrDefaultAsync();
+
+            if (orden != null)
+                return Ok(new { message = "Pendientes", fechaInicio= orden.fechaIngreso });
+            orden = await _context.gm_ordenTrabajosB
+               .Where(s => s.barcoMaquinariaId == int.Parse(parametros[0]) && ((DateTime.Compare(dateMantenimiento, s.fechaIngreso)) <= 0))
+               .FirstOrDefaultAsync();
+            if(orden !=null)
+                return Ok(new { message = "Ordenes Creadas", fechaInicio = orden.fechaIngreso });
+            return Ok(new { message = "No Pendientes" });
+        }
 
         // PUT: api/gm_ordenTrabajo/5
         [HttpPut("{id}")]
