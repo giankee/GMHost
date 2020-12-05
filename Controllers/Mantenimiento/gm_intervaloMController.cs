@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebappGM_API.Models;
+using WebappGM_API.Models.Mantenimiento;
 using WepAppGM.Models;
 
 namespace WebappGM_API.Controllers.Mantenimiento
@@ -100,14 +101,19 @@ namespace WebappGM_API.Controllers.Mantenimiento
                         {
                             if (datoTA.idTareaAccion == 0)
                                 _context.gm_tareaAcciones.Add(datoTA);
-                            else
-                                _context.Entry(datoTA).State = EntityState.Modified;
+                            else {
+                                if (datoTA.estado==1)
+                                    _context.Entry(datoTA).State = EntityState.Modified;
+                                else {
+                                    _context.gm_tareaAcciones.Remove(datoTA);
+                                }
+                            }
                         }
                         await _context.SaveChangesAsync();
                     }
                     
                 }
-            return CreatedAtAction("Getgm_intervaloM", new { id = gm_intervaloM.idIntervaloM }, gm_intervaloM);
+            return Ok(new { idIntervaloM = gm_intervaloM.idIntervaloM });
         }
 
         // POST: api/gm_intervaloM
@@ -150,8 +156,7 @@ namespace WebappGM_API.Controllers.Mantenimiento
                             }
                         }
                 }
-
-            return CreatedAtAction("Getgm_intervaloM", new { id = gm_intervaloM.idIntervaloM }, gm_intervaloM);
+            return Ok(new { idIntervaloM = gm_intervaloM.idIntervaloM });
         }
 
         // DELETE: api/gm_intervaloM/5

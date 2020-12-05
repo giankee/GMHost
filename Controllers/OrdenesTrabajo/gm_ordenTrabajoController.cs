@@ -189,22 +189,6 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
             }
         }
 
-        // GET: api/gm_ordenTrabajo/getBuscarOrdenPendiente/5
-        [Route("getBuscarOrdenPendiente/{id:int}")]//si funciona
-        public async Task<ActionResult<gm_ordenTrabajoB>> GetBuscarOrdenPendiente(int id)
-        {
-            gm_ordenTrabajoB orden;
-            orden = await _context.gm_ordenTrabajosB
-            .Where(s => s.barcoMaquinariaId == id && (s.estadoProceso=="Preliminar" ||s.estadoProceso=="En Proceso"))
-            .FirstOrDefaultAsync();
-
-            if (orden == null)
-            {
-                return Ok(new { message = "no pendientes" });
-            }
-            return Ok(orden);
-        }
-
         // GET: api/gm_ordenTrabajo/getBuscarOrdenPendiente/parametros1@parametro2....
         [Route("getBuscarOrdenPre/{strParametros}")]
         public async Task<ActionResult<gm_ordenTrabajoB>> GetBuscarOrdenPre(string strParametros)

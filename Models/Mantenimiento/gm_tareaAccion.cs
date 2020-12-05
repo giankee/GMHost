@@ -20,6 +20,9 @@ namespace WebappGM_API.Models.Mantenimiento
         [Required]
         public bool estadoActivado { get; set; }
 
+        [Required]
+        public int estado { get; set; }
+
         public gm_accionM accion { get; set; }
 
         public gm_intervaloTarea intervaloTarea { get; set; }

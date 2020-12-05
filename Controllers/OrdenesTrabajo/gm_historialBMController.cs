@@ -53,13 +53,14 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
                           {
                               idHistorialTaOrden = y.idHistorialTaOrden,
                               ordenTId = y.ordenTId,
+                              listAcciones=y.listAcciones,
                               ordenT = new gm_ordenTrabajoB
                               {
                                   fechaFinalizacion = y.ordenT.fechaFinalizacion,
                                   fechaIngreso = y.ordenT.fechaIngreso,
                                   valorHS = y.ordenT.valorHS
                               }
-                          }).ToList(),
+                          }).OrderByDescending(y1 => y1.ordenT.fechaIngreso).ToList(),
                         /*barcoMaquinaria = new gm_barco_maquinaria
                         {
                             maquinariaId = x.barcoMaquinaria.maquinariaId,
