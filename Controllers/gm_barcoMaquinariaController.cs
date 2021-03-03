@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -166,8 +167,7 @@ namespace WebappGM_API.Controllers
                     throw;
                 }
             }
-
-            return NoContent();
+            return Ok(new { message = "Ok" });
         }
 
         [Route("updateBM/{id:int}")]
@@ -187,8 +187,45 @@ namespace WebappGM_API.Controllers
         [HttpPost]
         public async Task<ActionResult<gm_barco_maquinaria>> Postgm_barco_maquinaria(gm_barco_maquinaria[] gm_barco_maquinaria)
         {
+            var auxNombre = "";
+            var selectBarco = _context.gm_barcos.Where(x => x.idBarco == gm_barco_maquinaria[0].barcoId).FirstOrDefault();
+            if (selectBarco.nombre.Contains("/"))
+            {
+                auxNombre = selectBarco.nombre.Replace("/", "");
+            }
+            else auxNombre = selectBarco.nombre;
+            string raiz = "c:/HostServerGM/Ang";
+            string filedir = "/assets/img/" + auxNombre + "/";
+            string rutaCompleta=raiz +filedir;
+            
+            if (!Directory.Exists(rutaCompleta))
+            { //check if the folder exists;
+                Directory.CreateDirectory(rutaCompleta);
+            }
+            var fileName = "";
             foreach (var datoBM in gm_barco_maquinaria)
             {
+                if (!datoBM.nombreI.Contains("/assets/img/"))
+                {
+                    var bytes = Convert.FromBase64String(datoBM.nombreI);
+
+                    if (datoBM.nombre.Contains("/"))
+                    {
+                        fileName = "b" + auxNombre + "_M" + datoBM.idBarcoMaquinaria + "_" + datoBM.nombre.Replace("/", "") + ".jpg";
+                    }
+                    else fileName = "b" + auxNombre + "_M" + datoBM.idBarcoMaquinaria + "_" + datoBM.nombre + ".jpg";
+                    string file = Path.Combine(rutaCompleta, fileName);
+                    datoBM.nombreI = filedir + fileName;
+                    if (bytes.Length > 0)
+                    {
+                        using (var stream = new FileStream(file, FileMode.Create))
+                        {
+                            stream.Write(bytes, 0, bytes.Length);
+                            stream.Flush();
+                        }
+                    }
+                }
+
                 if (datoBM.idBarcoMaquinaria == 0)
                     _context.gm_barco_maquinarias.Add(datoBM);
                 else

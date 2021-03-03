@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebAppGM.Models;
+using WebappGM_API.Models;
 using WepAppGM.Models;
 
 namespace WebAppGM.Controllers
@@ -82,8 +83,8 @@ namespace WebAppGM.Controllers
 
         // GET: api/gm_barco/getBarcoSelect3
         [HttpGet]
-        [Route("getBarcoSelect3")]
-        public IEnumerable<gm_barco> getBarcoSelect3()
+        [Route("getBarcosMaquinarias")]
+        public IEnumerable<gm_barco> getBarcosMaquinarias()
         {
             var barcos = _context.gm_barcos
                 .Select(x =>
@@ -96,12 +97,11 @@ namespace WebAppGM.Controllers
                         {
                             idBarcoMaquinaria = y.idBarcoMaquinaria,
                             nombre = y.nombre,
-                            barcoId = y.barcoId,
                             maquinariaId = y.maquinariaId,
-                            serie = y.serie,
                             horasServicio = y.horasServicio,
                             checkMaquinaria = y.checkMaquinaria,
                             fechaIncorporacionB = y.fechaIncorporacionB,
+                            estado=y.estado,
                             maquinaria = new gm_maquinaria
                             {
                                 modelo = y.maquinaria.modelo,
@@ -122,10 +122,59 @@ namespace WebAppGM.Controllers
                 return BadRequest(ModelState);
             }
 
-            var gm_barco = await _context.gm_barcos
-                .Include(b => b.listBarcoMaquinarias).ThenInclude(b1 => b1.maquinaria)
-                .Include(c => c.listGaleriaArchivoBarcos)
-                .Where(s => s.idBarco == id).FirstOrDefaultAsync();
+            var gm_barco = await _context.gm_barcos.Where(s => s.idBarco == id).Select(x =>
+                new gm_barco
+                {
+                    idBarco = x.idBarco,
+                    nombre = x.nombre,
+                    armador = x.armador,
+                    constructorB = x.constructorB,
+                    lugarConstruccion = x.lugarConstruccion,
+                    anioConstruccion = x.anioConstruccion,
+                    lugarReConstruccion = x.lugarReConstruccion,
+                    anioReConstruccion = x.anioReConstruccion,
+                    numMatricula = x.numMatricula,
+                    materialCasco = x.materialCasco,
+                    eslora = x.eslora,
+                    manga = x.manga,
+                    puntal = x.puntal,
+                    calado = x.calado,
+                    tonelajeBruto = x.tonelajeBruto,
+                    tonelajeNeto = x.tonelajeNeto,
+                    desMaximaCarga = x.desMaximaCarga,
+                    capacidadBodega = x.capacidadBodega,
+                    tipoBodega = x.tipoBodega,
+                    metodoPesca = x.metodoPesca,
+                    nombreI = x.nombreI,
+                    estado = x.estado,
+                    listBarcoMaquinarias = x.listBarcoMaquinarias.Select(y =>
+                        new gm_barco_maquinaria
+                        {
+                            idBarcoMaquinaria = y.idBarcoMaquinaria,
+                            nombre = y.nombre,
+                            maquinariaId = y.maquinariaId,
+                            horasServicio = y.horasServicio,
+                            checkMaquinaria = y.checkMaquinaria,
+                            estado = y.estado,
+                            maquinaria = new gm_maquinaria
+                            {
+                                modelo = y.maquinaria.modelo,
+                                estado = y.maquinaria.estado
+                            }
+                        }
+                    ).Where(y => y.checkMaquinaria == true).ToList(),
+                    listGaleriaArchivoBarcos = x.listGaleriaArchivoBarcos.Select(y =>
+                        new gm_galeriaArchivoBarco
+                        {
+                            idGaleriaGeneral = y.idGaleriaGeneral,
+                            barcoId=y.barcoId,
+                            barcoMaquinariaId = y.barcoMaquinariaId,
+                            nombreArchivo = y.nombreArchivo,
+                            tipoArchivo = y.tipoArchivo,
+                            rutaArchivo =y.rutaArchivo
+                        }
+                    ).ToList()
+                }).FirstOrDefaultAsync();
 
             if (gm_barco == null)
             {
@@ -148,7 +197,37 @@ namespace WebAppGM.Controllers
             {
                 return BadRequest();
             }
+            
+            if (!gm_barco.nombreI.Contains("/assets/img/"))
+            {
+                var fileName = "img_";
+                if (gm_barco.nombre.Contains("/"))
+                {
+                    fileName = fileName+ gm_barco.nombre.Replace("/", "") + ".jpg";
+                }
+                else fileName = fileName+gm_barco.nombre + ".jpg";
 
+                var bytes = Convert.FromBase64String(gm_barco.nombreI);
+                
+                string raiz = "c:/HostServerGM/Ang";
+                string filedir = "/assets/img/";
+                string rutaCompleta = raiz + filedir;
+                if (!Directory.Exists(rutaCompleta))
+                { //check if the folder exists;
+                    Directory.CreateDirectory(rutaCompleta);
+                }
+                string file = Path.Combine(rutaCompleta, fileName);
+                gm_barco.nombreI = filedir + fileName;
+                if (bytes.Length > 0)
+                {
+                    using (var stream = new FileStream(file, FileMode.Create))
+                    {
+                        stream.Write(bytes, 0, bytes.Length);
+                        stream.Flush();
+                    }
+                }
+            }
+            
             _context.Entry(gm_barco).State = EntityState.Modified;
 
             try
@@ -178,6 +257,35 @@ namespace WebAppGM.Controllers
 
             if (nombre == null)
             {
+                if (!gm_barco.nombreI.Contains("/assets/img/"))
+                {
+                    var fileName = "img_";
+                    if (gm_barco.nombre.Contains("/"))
+                    {
+                        fileName = fileName + gm_barco.nombre.Replace("/", "") + ".jpg";
+                    }
+                    else fileName = fileName + gm_barco.nombre + ".jpg";
+
+                    var bytes = Convert.FromBase64String(gm_barco.nombreI);
+                    string raiz = "c:/HostServerGM/Ang";
+                    string filedir = "/assets/img/";
+                    string rutaCompleta= raiz + filedir;
+                    if (!Directory.Exists(rutaCompleta))
+                    { //check if the folder exists;
+                        Directory.CreateDirectory(rutaCompleta);
+                    }
+
+                    string file = Path.Combine(rutaCompleta, fileName);
+                    gm_barco.nombreI = filedir + fileName;
+                    if (bytes.Length > 0)
+                    {
+                        using (var stream = new FileStream(file, FileMode.Create))
+                        {
+                            stream.Write(bytes, 0, bytes.Length);
+                            stream.Flush();
+                        }
+                    }
+                }
                 _context.gm_barcos.Add(gm_barco);
                 await _context.SaveChangesAsync();
                 return CreatedAtAction("Getgm_barco", new { id = gm_barco.idBarco }, gm_barco);

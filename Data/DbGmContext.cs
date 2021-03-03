@@ -38,8 +38,6 @@ namespace WepAppGM.Models
             modelBuilder.Entity<gm_planMantenimiento>().HasQueryFilter(x => x.estado == 1);
             modelBuilder.Entity<gm_planMantenimiento>().HasIndex(b => b.nombre).IsUnique();
 
-            modelBuilder.Entity<gm_barco_maquinaria>().HasQueryFilter(x => x.estado == 1);
-
             modelBuilder.Entity<gm_medicionM>().HasQueryFilter(x => x.estado == 1);
 
             // Seed

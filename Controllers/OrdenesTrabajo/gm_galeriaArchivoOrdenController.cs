@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebAppGM.Models;
 using WebappGM_API.Models.OrdenesTrabajoB;
 using WepAppGM.Models;
 
@@ -76,8 +78,66 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
         [HttpPost]
         public async Task<ActionResult<gm_galeriaArchivoOrden>> Postgm_galeriaArchivoOrden(gm_galeriaArchivoOrden[] gm_galeriaArchivoOrden)
         {
+            string raiz = "c:/HostServerGM/Ang";
+            string filedir;
+            
+            gm_ordenTrabajoB selectOrden;
+            selectOrden = _context.gm_ordenTrabajosB.Select(x =>
+                new gm_ordenTrabajoB
+                {
+                    idOrdenT = x.idOrdenT,
+                    barcoMaquinariaId = x.barcoMaquinariaId,
+                    barcoMaquinaria = new gm_barco_maquinaria
+                    {
+                        idBarcoMaquinaria = x.barcoMaquinaria.idBarcoMaquinaria,
+                        barcoId = x.barcoMaquinaria.barcoId,
+                        nombre = x.barcoMaquinaria.nombre,
+                        barco = new gm_barco
+                        {
+                            nombre = x.barcoMaquinaria.barco.nombre,
+                        }
+                    }
+                }).Where(x => x.idOrdenT == gm_galeriaArchivoOrden[0].ordenTrabajoId).FirstOrDefault();
+
+            if (selectOrden.barcoMaquinaria.barco.nombre.Contains("/"))
+            {
+                filedir = "/assets/img/" + selectOrden.barcoMaquinaria.barco.nombre.Replace("/", "") + "/";
+            }
+            else filedir = "/assets/img/" + selectOrden.barcoMaquinaria.barco.nombre + "/";
+
+            if (selectOrden.barcoMaquinaria.nombre.Contains("/"))
+            {
+                filedir = filedir + selectOrden.barcoMaquinaria.nombre.Replace("/", "") + "/";
+            }else
+            filedir = filedir+ selectOrden.barcoMaquinaria.nombre + "/";
+
+            string rutaCompleta = raiz + filedir;
+            if (!Directory.Exists(rutaCompleta))
+            { //check if the folder exists;
+                Directory.CreateDirectory(rutaCompleta);
+            }
+            var fileName = "";
             foreach (var datoG in gm_galeriaArchivoOrden)
             {
+                var bytes = Convert.FromBase64String(datoG.rutaArchivo);
+                var extencion = datoG.tipoArchivo.Split("/");
+
+                if (datoG.nombreArchivo.Contains("/"))
+                {
+                    fileName = "GO" + selectOrden.idOrdenT + "_" + datoG.nombreArchivo.Replace("/", "") + "." + extencion[1];
+                }
+                else fileName = "GO" + selectOrden.idOrdenT+"_" + datoG.nombreArchivo + "." + extencion[1];
+
+                string file = Path.Combine(rutaCompleta, fileName);
+                datoG.rutaArchivo = filedir + fileName;
+                if (bytes.Length > 0)
+                {
+                    using (var stream = new FileStream(file, FileMode.Create))
+                    {
+                        stream.Write(bytes, 0, bytes.Length);
+                        stream.Flush();
+                    }
+                }
                 _context.gm_galeriaArchivoOrdenes.Add(datoG);
                 await _context.SaveChangesAsync();
             }
@@ -85,9 +145,50 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
         }
 
         [HttpPost]
-        [Route("Delate")]
+        [Route("Delate")]//tengo q hacer la copia de galeria que hice en barcos pilas mañana crack
         public async Task<ActionResult<gm_galeriaArchivoOrden>> Postgm_galeriaArchivoOrdenDelate(gm_galeriaArchivoOrden[] gm_galeriaArchivoOrden)
         {
+            string raiz = "c:/HostServerGM/Ang";
+            string filedir;
+
+            gm_ordenTrabajoB selectOrden;
+            selectOrden = _context.gm_ordenTrabajosB.Select(x =>
+                new gm_ordenTrabajoB
+                {
+                    idOrdenT = x.idOrdenT,
+                    barcoMaquinariaId = x.barcoMaquinariaId,
+                    barcoMaquinaria = new gm_barco_maquinaria
+                    {
+                        idBarcoMaquinaria = x.barcoMaquinaria.idBarcoMaquinaria,
+                        barcoId = x.barcoMaquinaria.barcoId,
+                        nombre = x.barcoMaquinaria.nombre,
+                        barco = new gm_barco
+                        {
+                            nombre = x.barcoMaquinaria.barco.nombre,
+                        }
+                    }
+                }).Where(x => x.idOrdenT == gm_galeriaArchivoOrden[0].ordenTrabajoId).FirstOrDefault();
+
+            if (selectOrden.barcoMaquinaria.barco.nombre.Contains("/"))
+            {
+                filedir = "/assets/img/" + selectOrden.barcoMaquinaria.barco.nombre.Replace("/", "") + "/";
+            }
+            else filedir = "/assets/img/" + selectOrden.barcoMaquinaria.barco.nombre + "/";
+
+            if (selectOrden.barcoMaquinaria.nombre.Contains("/"))
+            {
+                filedir = filedir + selectOrden.barcoMaquinaria.nombre.Replace("/", "") + "/";
+            }
+            else
+                filedir = filedir + selectOrden.barcoMaquinaria.nombre + "/";
+
+            string rutaCompleta = raiz + filedir;
+            String[] archivos = null;
+            if (Directory.Exists(rutaCompleta))
+            { //check if the folder exists;
+                archivos = Directory.GetFiles(rutaCompleta);
+            }
+
             gm_galeriaArchivoOrden auxGaleria;
 
             foreach (var datoG in gm_galeriaArchivoOrden)
@@ -96,6 +197,16 @@ namespace WebappGM_API.Controllers.OrdenesTrabajo
                 .Where(s => s.idArchivo == datoG.idArchivo).FirstOrDefaultAsync();
                 if (auxGaleria != null)
                 {
+                    if (archivos != null)
+                    {
+                        foreach (string datoA in archivos)
+                        {
+                            if (datoA.Contains(auxGaleria.rutaArchivo))
+                            {
+                                System.IO.File.Delete(datoA);
+                            }
+                        }
+                    }
                     _context.gm_galeriaArchivoOrdenes.Remove(auxGaleria);
                     await _context.SaveChangesAsync();
                 }
